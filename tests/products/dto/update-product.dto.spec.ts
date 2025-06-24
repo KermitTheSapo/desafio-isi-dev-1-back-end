@@ -176,7 +176,7 @@ describe("UpdateProductDto", () => {
       expect(priceErrors.length).toBeGreaterThan(0);
 
       expect(priceErrors[0].constraints).toBeDefined();
-      const hasValidationError = Object.keys(priceErrors[0].constraints).some(
+      const hasValidationError = Object.keys(priceErrors[0].constraints || {}).some(
         (key) =>
           key.includes("maxDecimalPlaces") ||
           key.includes("isNumber") ||

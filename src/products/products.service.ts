@@ -1,18 +1,16 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  UnprocessableEntityException,
-  BadRequestException,
-} from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Product } from "./entities/product.entity";
-import { Coupon } from "../coupons/entities/coupon.entity";
-import { ProductCouponApplication } from "./entities/product-coupon-application.entity";
-import { CreateProductDto } from "./dto/create-product.dto";
-import { UpdateProductDto } from "./dto/update-product.dto";
-import { ProductQueryDto } from "./dto/product-query.dto";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Product } from './entities/product.entity';
+import { Coupon } from '../coupons/entities/coupon.entity';
+import { ProductCouponApplication } from './entities/product-coupon-application.entity';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductQueryDto } from './dto/product-query.dto';
+import { ProductQueryBuilderService } from './services/product-query-builder.service';
+import { ProductDiscountService } from './services/product-discount.service';
+import { ProductValidationService } from './services/product-validation.service';
+import { PaginatedResponse } from '../common/interfaces/common.interfaces';
 
 @Injectable()
 export class ProductsService {
@@ -22,19 +20,18 @@ export class ProductsService {
     @InjectRepository(Coupon)
     private readonly couponRepository: Repository<Coupon>,
     @InjectRepository(ProductCouponApplication)
-    private readonly applicationRepository: Repository<ProductCouponApplication>
+    private readonly applicationRepository: Repository<ProductCouponApplication>,
+    private readonly queryBuilderService: ProductQueryBuilderService,
+    private readonly discountService: ProductDiscountService,
+    private readonly validationService: ProductValidationService
   ) {}
+
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const normalizedName = this.normalizeName(createProductDto.name);
+    const normalizedName = this.discountService.normalizeName(
+      createProductDto.name
+    );
 
-    const existingProduct = await this.productRepository.findOne({
-      where: { name: normalizedName },
-      withDeleted: true,
-    });
-
-    if (existingProduct) {
-      throw new ConflictException("Product name already exists");
-    }
+    await this.validationService.validateUniqueProductName(normalizedName);
 
     const product = this.productRepository.create({
       ...createProductDto,
@@ -44,7 +41,7 @@ export class ProductsService {
     return this.productRepository.save(product);
   }
 
-  async findAll(query: ProductQueryDto) {
+  async findAll(query: ProductQueryDto): Promise<PaginatedResponse<Product>> {
     const {
       page = 1,
       limit = 10,
@@ -52,63 +49,42 @@ export class ProductsService {
       minPrice,
       maxPrice,
       hasDiscount,
-      sortBy = "created_at",
-      sortOrder = "desc",
+      sortBy = 'created_at',
+      sortOrder = 'desc',
       includeDeleted = false,
       onlyOutOfStock = false,
       withCouponApplied = false,
     } = query;
 
     const queryBuilder = this.productRepository
-      .createQueryBuilder("product")
+      .createQueryBuilder('product')
       .leftJoinAndSelect(
-        "product.couponApplications",
-        "application",
-        "application.removed_at IS NULL"
+        'product.couponApplications',
+        'application',
+        'application.removed_at IS NULL'
       )
-      .leftJoinAndSelect("application.coupon", "coupon");
+      .leftJoinAndSelect('application.coupon', 'coupon');
 
-    if (includeDeleted) {
-      queryBuilder.withDeleted();
-    }
+    const filters = {
+      search,
+      minPrice,
+      maxPrice,
+      hasDiscount,
+      onlyOutOfStock,
+      withCouponApplied,
+      includeDeleted,
+    };
+    this.queryBuilderService.applyFilters(queryBuilder, filters);
 
-    if (search) {
-      queryBuilder.andWhere(
-        "(product.name LIKE :search OR product.description LIKE :search)",
-        { search: `%${search}%` }
-      );
-    }
+    this.queryBuilderService.applySorting(queryBuilder, {
+      sortBy,
+      sortOrder: sortOrder as 'asc' | 'desc',
+    });
 
-    if (minPrice !== undefined) {
-      queryBuilder.andWhere("product.price >= :minPrice", { minPrice });
-    }
-    if (maxPrice !== undefined) {
-      queryBuilder.andWhere("product.price <= :maxPrice", { maxPrice });
-    }
-
-    if (onlyOutOfStock) {
-      queryBuilder.andWhere("product.stock = 0");
-    }
-
-    if (withCouponApplied) {
-      queryBuilder.andWhere("application.id IS NOT NULL");
-    }
-
-    if (hasDiscount !== undefined) {
-      if (hasDiscount) {
-        queryBuilder.andWhere("application.id IS NOT NULL");
-      } else {
-        queryBuilder.andWhere("application.id IS NULL");
-      }
-    }
-
-    const orderDirection = sortOrder.toUpperCase() as "ASC" | "DESC";
-    queryBuilder.orderBy(`product.${sortBy}`, orderDirection);
-
-    const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit);
+    this.queryBuilderService.applyPagination(queryBuilder, { page, limit });
 
     const [products, total] = await queryBuilder.getManyAndCount();
+
     return {
       data: products,
       meta: {
@@ -121,43 +97,32 @@ export class ProductsService {
   }
 
   async findOne(id: number): Promise<Product> {
-    const product = await this.productRepository.findOne({
-      where: { id },
-      relations: ["couponApplications", "couponApplications.coupon"],
-    });
-
-    if (!product) {
-      throw new NotFoundException("Product not found");
-    }
-
-    return product;
+    return this.validationService.validateProductExists(id);
   }
 
   async update(
     id: number,
     updateProductDto: UpdateProductDto
   ): Promise<Product> {
-    const product = await this.findOne(id);
+    const product = await this.validationService.validateProductExists(id);
 
     if (updateProductDto.name && updateProductDto.name !== product.name) {
-      const normalizedName = this.normalizeName(updateProductDto.name);
-      const existingProduct = await this.productRepository.findOne({
-        where: { name: normalizedName },
-        withDeleted: true,
-      });
-
-      if (existingProduct && existingProduct.id !== id) {
-        throw new ConflictException("Product name already exists");
-      }
-
+      const normalizedName = this.discountService.normalizeName(
+        updateProductDto.name
+      );
+      await this.validationService.validateUniqueProductName(
+        normalizedName,
+        id
+      );
       updateProductDto.name = normalizedName;
     }
 
     await this.productRepository.update(id, updateProductDto);
     return this.findOne(id);
   }
+
   async remove(id: number): Promise<void> {
-    await this.findOne(id);
+    await this.validationService.validateProductExists(id);
     await this.productRepository.softDelete(id);
   }
 
@@ -166,46 +131,24 @@ export class ProductsService {
     return this.findOne(id);
   }
   async applyCoupon(id: number, couponCode: string): Promise<Product> {
-    const product = await this.findOne(id);
+    const product = await this.validationService.validateProductExists(id);
+    this.validationService.validateNoActiveDiscount(product);
 
-    const hasActiveDiscount = product.couponApplications.some(
-      (app) => app.removed_at === null
+    const coupon =
+      await this.validationService.validateCouponExists(couponCode);
+    this.validationService.validateCouponUsability(coupon);
+
+    await this.validationService.validateCouponNotAlreadyUsed(
+      id,
+      coupon.id,
+      coupon.one_shot
     );
 
-    if (hasActiveDiscount) {
-      throw new ConflictException("Product already has an active discount");
-    }
-
-    const coupon = await this.couponRepository.findOne({
-      where: { code: couponCode.toUpperCase() },
-    });
-
-    if (!coupon) {
-      throw new NotFoundException("Coupon not found");
-    }
-
-    if (!coupon.canBeUsed) {
-      throw new BadRequestException("Coupon is not valid or has expired");
-    }
-
-    if (coupon.one_shot) {
-      const previousApplication = await this.applicationRepository.findOne({
-        where: { product_id: id, coupon_id: coupon.id },
-      });
-
-      if (previousApplication) {
-        throw new ConflictException(
-          "This coupon has already been used for this product"
-        );
-      }
-    }
-
-    const finalPrice = this.calculateFinalPrice(Number(product.price), coupon);
-    if (finalPrice < 0.01) {
-      throw new UnprocessableEntityException(
-        "Discount would make product price below minimum (R$ 0.01)"
-      );
-    }
+    const finalPrice = this.discountService.calculateFinalPrice(
+      Number(product.price),
+      coupon
+    );
+    this.discountService.validateDiscountPrice(finalPrice);
 
     const application = this.applicationRepository.create({
       product_id: id,
@@ -219,16 +162,11 @@ export class ProductsService {
 
     return this.findOne(id);
   }
+
   async removeDiscount(id: number): Promise<void> {
-    const product = await this.findOne(id);
-
-    const activeApplication = product.couponApplications.find(
-      (app) => app.removed_at === null
-    );
-
-    if (!activeApplication) {
-      throw new NotFoundException("No active discount found for this product");
-    }
+    const product = await this.validationService.validateProductExists(id);
+    const activeApplication =
+      this.validationService.validateActiveDiscountExists(product);
 
     await this.applicationRepository.update(activeApplication.id, {
       removed_at: new Date(),
@@ -236,32 +174,17 @@ export class ProductsService {
   }
 
   async applyPercentDiscount(id: number, percentage: number): Promise<Product> {
-    if (percentage < 1 || percentage > 80) {
-      throw new BadRequestException(
-        "Percentage discount must be between 1% and 80%"
-      );
-    }
+    this.discountService.validatePercentageDiscount(percentage);
 
-    const product = await this.findOne(id);
-
-    const hasActiveDiscount = product.couponApplications.some(
-      (app) => app.removed_at === null
-    );
-
-    if (hasActiveDiscount) {
-      throw new ConflictException("Product already has an active discount");
-    }
+    const product = await this.validationService.validateProductExists(id);
+    this.validationService.validateNoActiveDiscount(product);
 
     const finalPrice = Number(product.price) * (1 - percentage / 100);
-    if (finalPrice < 0.01) {
-      throw new UnprocessableEntityException(
-        "Discount would make product price below minimum (R$ 0.01)"
-      );
-    }
+    this.discountService.validateDiscountPrice(finalPrice);
 
     const systemCoupon = this.couponRepository.create({
       code: `SYSTEM_${id}_${Date.now()}`,
-      type: "percent" as any,
+      type: 'percent' as any,
       value: percentage,
       one_shot: false,
       max_uses: 1,
@@ -280,22 +203,5 @@ export class ProductsService {
     await this.applicationRepository.save(application);
 
     return this.findOne(id);
-  }
-
-  private normalizeName(name: string): string {
-    return name
-      .trim()
-      .replace(/\s+/g, " ")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  private calculateFinalPrice(originalPrice: number, coupon: Coupon): number {
-    if (coupon.type === "percent") {
-      return originalPrice * (1 - coupon.value / 100);
-    } else {
-      return Math.max(0.01, originalPrice - coupon.value);
-    }
   }
 }

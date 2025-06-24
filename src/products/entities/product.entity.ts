@@ -6,38 +6,38 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
-} from "typeorm";
+} from 'typeorm';
+import { ProductCouponApplication } from './product-coupon-application.entity';
+import { DiscountInfo } from '../../common/interfaces/common.interfaces';
 
-@Entity("products")
+@Entity('products')
 export class Product {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
-  @Column({ type: "varchar", length: 100, unique: true })
-  name: string;
+  @Column({ type: 'varchar', length: 100, unique: true })
+  name!: string;
 
-  @Column({ type: "varchar", length: 300, nullable: true })
+  @Column({ type: 'varchar', length: 300, nullable: true })
   description?: string;
 
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  price: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  price!: number;
 
-  @Column({ type: "integer", default: 0 })
-  stock: number;
+  @Column({ type: 'integer', default: 0 })
+  stock!: number;
 
-  @CreateDateColumn({ type: "datetime" })
-  created_at: Date;
+  @CreateDateColumn({ type: 'datetime' })
+  created_at!: Date;
 
-  @UpdateDateColumn({ type: "datetime" })
-  updated_at: Date;
+  @UpdateDateColumn({ type: 'datetime' })
+  updated_at!: Date;
 
-  @DeleteDateColumn({ type: "datetime", nullable: true })
+  @DeleteDateColumn({ type: 'datetime', nullable: true })
   deleted_at?: Date;
-  @OneToMany(
-    "ProductCouponApplication",
-    (application: any) => application.product
-  )
-  couponApplications: any[];
+
+  @OneToMany(() => ProductCouponApplication, application => application.product)
+  couponApplications!: ProductCouponApplication[];
 
   get is_out_of_stock(): boolean {
     return this.stock === 0;
@@ -45,7 +45,7 @@ export class Product {
 
   get finalPrice(): number {
     const activeApplication = this.couponApplications?.find(
-      (app) => app.removed_at === null
+      app => app.removed_at === null
     );
 
     if (!activeApplication) {
@@ -53,16 +53,16 @@ export class Product {
     }
 
     const coupon = activeApplication.coupon;
-    if (coupon.type === "percent") {
+    if (coupon.type === 'percent') {
       return Number(this.price) * (1 - coupon.value / 100);
     } else {
       return Math.max(0.01, Number(this.price) - coupon.value);
     }
   }
 
-  get discount() {
+  get discount(): DiscountInfo | null {
     const activeApplication = this.couponApplications?.find(
-      (app) => app.removed_at === null
+      app => app.removed_at === null
     );
 
     if (!activeApplication) {
@@ -78,7 +78,7 @@ export class Product {
 
   get hasCouponApplied(): boolean {
     return (
-      this.couponApplications?.some((app) => app.removed_at === null) || false
+      this.couponApplications?.some(app => app.removed_at === null) || false
     );
   }
 }

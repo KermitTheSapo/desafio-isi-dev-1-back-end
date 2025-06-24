@@ -8,5 +8,5 @@ export class ApplyCouponDto {
   @Matches(/^[A-Z0-9]+$/, {
     message: "coupon code must contain only uppercase letters and numbers",
   })
-  couponCode: string;
+  couponCode!: string;
 }
