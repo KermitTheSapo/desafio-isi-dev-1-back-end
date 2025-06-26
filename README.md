@@ -66,6 +66,18 @@ npm run format             # Formata código com Prettier
 npm run format:check       # Verifica formatação
 npm run typecheck          # Verifica tipagem TypeScript
 npm run check-all          # Executa todas as verificações
+
+# Docker
+npm run docker:build      # Build da imagem Docker
+npm run docker:run         # Executa container em produção
+npm run docker:dev         # Executa em modo desenvolvimento com Docker
+npm run docker:prod        # Executa em modo produção com docker-compose
+npm run docker:prod-full   # Executa em produção com Nginx reverse proxy
+npm run docker:stop        # Para os containers
+npm run docker:stop-dev    # Para containers de desenvolvimento
+npm run docker:stop-prod   # Para containers de produção
+npm run docker:logs        # Visualiza logs dos containers
+npm run docker:clean       # Limpa imagens e volumes não utilizados
 ```
 
 ## 📁 Estrutura do projeto
@@ -148,6 +160,13 @@ coverage/                # Relatórios de cobertura de testes
   - _Motivo_: Identificação de problemas de código, manutenção de padrões
 - **Prettier** (v3.0.0) - Formatador de código
   - _Motivo_: Formatação consistente, integração com editores
+
+### DevOps e Containerização
+
+- **Docker** - Containerização da aplicação
+  - _Motivo_: Portabilidade, isolamento de dependências, facilidade de deploy
+- **Docker Compose** - Orquestração de containers
+  - _Motivo_: Gerenciamento simplificado de múltiplos serviços e ambientes
 
 ## 🏗 Arquitetura e Decisões Técnicas
 
@@ -255,6 +274,82 @@ Os testes cobrem:
 ## 📝 API Documentation
 
 A documentação completa da API está disponível em `/docs` quando a aplicação estiver rodando, gerada automaticamente pelo Swagger com base nos decorators dos controllers.
+
+## 🐳 Execução com Docker
+
+### Pré-requisitos Docker
+
+- Docker (versão 20.10 ou superior)
+- Docker Compose (versão 2.0 ou superior)
+
+### Opção 1: Docker Compose (Recomendado)
+
+**Desenvolvimento:**
+
+```bash
+# Executa em modo desenvolvimento com hot-reload
+npm run docker:dev
+
+# Ou diretamente com docker-compose
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+**Produção:**
+
+```bash
+# Executa em modo produção (simples)
+npm run docker:prod
+
+# Executa em modo produção com Nginx (completo)
+npm run docker:prod-full
+
+# Ou diretamente com docker-compose
+docker-compose up --build                           # Simples
+docker-compose -f docker-compose.prod.yml up --build # Com Nginx
+```
+
+### Opção 2: Docker Manual
+
+```bash
+# Build da imagem
+npm run docker:build
+
+# Executar container
+npm run docker:run
+
+# Ou comandos diretos
+docker build -t desafio-isi-backend .
+docker run -p 3001:3001 desafio-isi-backend
+```
+
+### Comandos Docker Úteis
+
+```bash
+# Parar containers
+npm run docker:stop        # Produção
+npm run docker:stop-dev    # Desenvolvimento
+
+# Visualizar logs
+npm run docker:logs
+
+# Limpeza do sistema
+npm run docker:clean
+
+# Acessar container em execução
+docker exec -it desafio-isi-backend sh
+
+# Verificar status dos containers
+docker-compose ps
+```
+
+### Vantagens do Docker
+
+- **Portabilidade**: Ambiente consistente em qualquer máquina
+- **Isolamento**: Dependências isoladas do sistema host
+- **Facilidade de Deploy**: Deploy simplificado em qualquer ambiente
+- **Consistência**: Mesmo ambiente em desenvolvimento, teste e produção
+- **Escalabilidade**: Fácil escalonamento horizontal
+- **Versionamento**: Controle de versões das imagens
 
 ---
 

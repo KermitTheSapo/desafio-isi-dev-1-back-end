@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desafio-isi-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_TYPE=sqlite
+      - DB_DATABASE=:memory:
+      - DB_SYNCHRONIZE=true
+      - DB_LOGGING=false
+      - API_PREFIX=api/v1
+      - CORS_ENABLED=true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/products"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - desafio-network
+
+  # SQLite com volume persistente (opcional para desenvolvimento)
+  # Uncomment below for persistent SQLite database
+  # api-persistent:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: desafio-isi-backend-persistent
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3001
+  #     - DB_TYPE=sqlite
+  #     - DB_DATABASE=/app/data/database.sqlite
+  #     - DB_SYNCHRONIZE=true
+  #     - DB_LOGGING=false
+  #     - API_PREFIX=api/v1
+  #     - CORS_ENABLED=true
+  #   volumes:
+  #     - sqlite_data:/app/data
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/products"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+  #   restart: unless-stopped
+  #   networks:
+  #     - desafio-network
+
+networks:
+  desafio-network:
+    driver: bridge
+
+# Volumes for persistent data
+# volumes:
+#   sqlite_data:
+#     driver: local

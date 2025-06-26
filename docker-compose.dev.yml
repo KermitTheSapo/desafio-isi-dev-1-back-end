@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Backend API em modo desenvolvimento
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: desafio-isi-backend-dev
+    ports:
+      - "3001:3001"
+      - "9229:9229" # Debug port
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_TYPE=sqlite
+      - DB_DATABASE=:memory:
+      - DB_SYNCHRONIZE=true
+      - DB_LOGGING=true
+      - API_PREFIX=api/v1
+      - CORS_ENABLED=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run start:debug
+    restart: unless-stopped
+    networks:
+      - desafio-network-dev
+
+networks:
+  desafio-network-dev:
+    driver: bridge

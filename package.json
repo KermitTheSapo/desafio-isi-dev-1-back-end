@@ -24,7 +24,17 @@
     "dev": "npm run start:dev",
     "test:unit": "jest --testPathPattern=tests/.*\\.spec\\.ts$",
     "test:integration": "jest --testPathPattern=tests/.*\\.integration\\.spec\\.ts$",
-    "check-all": "npm run typecheck && npm run lint && npm run format:check && npm run test:cov"
+    "check-all": "npm run typecheck && npm run lint && npm run format:check && npm run test:cov",
+    "docker:build": "docker build -t desafio-isi-backend .",
+    "docker:run": "docker run -p 3001:3001 desafio-isi-backend",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up --build",
+    "docker:prod": "docker-compose up --build",
+    "docker:prod-full": "docker-compose -f docker-compose.prod.yml up --build",
+    "docker:stop": "docker-compose down",
+    "docker:stop-dev": "docker-compose -f docker-compose.dev.yml down",
+    "docker:stop-prod": "docker-compose -f docker-compose.prod.yml down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker system prune -a --volumes"
   },
   "keywords": [
     "nestjs",
