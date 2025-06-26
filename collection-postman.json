@@ -1,0 +1,532 @@
+{
+	"info": {
+		"_postman_id": "f06b7de9-daf5-4d0d-a511-d9fc5d4f2813",
+		"name": "Desafio ISI - Backend API",
+		"description": "Collection completa para testar todos os endpoints da API do desafio ISI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24383174"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Criar Produto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"asdfasdfasdfasdfsd\",\n  \"description\": \"Descrição do produto exemplo\",\n  \"price\": 99.99,\n  \"stock\": 100\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Cria um novo produto"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Produtos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Lista todos os produtos"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Produtos com Filtros",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products?page=1&limit=10&search=exemplo&minPrice=10&maxPrice=200&hasDiscount=false&sortBy=name&sortOrder=asc&includeDeleted=false&onlyOutOfStock=false&withCouponApplied=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Página (padrão: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Limite por página (padrão: 10, máx: 50)"
+								},
+								{
+									"key": "search",
+									"value": "exemplo",
+									"description": "Busca por nome do produto"
+								},
+								{
+									"key": "minPrice",
+									"value": "10",
+									"description": "Preço mínimo"
+								},
+								{
+									"key": "maxPrice",
+									"value": "200",
+									"description": "Preço máximo"
+								},
+								{
+									"key": "hasDiscount",
+									"value": "false",
+									"description": "Filtrar produtos com desconto"
+								},
+								{
+									"key": "sortBy",
+									"value": "name",
+									"description": "Ordenar por: name, price, created_at, stock"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc",
+									"description": "Ordem: asc, desc"
+								},
+								{
+									"key": "includeDeleted",
+									"value": "false",
+									"description": "Incluir produtos excluídos"
+								},
+								{
+									"key": "onlyOutOfStock",
+									"value": "false",
+									"description": "Apenas produtos sem estoque"
+								},
+								{
+									"key": "withCouponApplied",
+									"value": "false",
+									"description": "Produtos com cupom aplicado"
+								}
+							]
+						},
+						"description": "Lista produtos com filtros avançados"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Produto por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
+						},
+						"description": "Busca um produto específico pelo ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Produto",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Produto Atualizado\",\n  \"description\": \"Nova descrição\",\n  \"price\": 149.99,\n  \"stock\": 50\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
+						},
+						"description": "Atualiza um produto existente"
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Produto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
+						},
+						"description": "Exclui um produto (soft delete)"
+					},
+					"response": []
+				},
+				{
+					"name": "Restaurar Produto",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/1/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1",
+								"restore"
+							]
+						},
+						"description": "Restaura um produto excluído"
+					},
+					"response": []
+				},
+				{
+					"name": "Aplicar Desconto Percentual",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"percentage\": 15\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/1/discount/percent",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1",
+								"discount",
+								"percent"
+							]
+						},
+						"description": "Aplica desconto percentual ao produto (1% a 80%)"
+					},
+					"response": []
+				},
+				{
+					"name": "Aplicar Cupom de Desconto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"couponCode\": \"DESCONTO20\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/1/discount/coupon",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1",
+								"discount",
+								"coupon"
+							]
+						},
+						"description": "Aplica cupom de desconto ao produto"
+					},
+					"response": []
+				},
+				{
+					"name": "Remover Desconto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/1/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1",
+								"discount"
+							]
+						},
+						"description": "Remove desconto aplicado ao produto"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Coupons",
+			"item": [
+				{
+					"name": "Criar Cupom",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"DESCONTO20\",\n  \"type\": \"percent\",\n  \"value\": 20,\n  \"one_shot\": false,\n  \"max_uses\": 100,\n  \"valid_from\": \"2025-01-01T00:00:00.000Z\",\n  \"valid_until\": \"2025-12-31T23:59:59.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/coupons",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons"
+							]
+						},
+						"description": "Cria um novo cupom de desconto"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Cupom Valor Fixo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"FIXO50\",\n  \"type\": \"fixed\",\n  \"value\": 50.00,\n  \"one_shot\": true,\n  \"max_uses\": 1,\n  \"valid_from\": \"2025-01-01T00:00:00.000Z\",\n  \"valid_until\": \"2025-12-31T23:59:59.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/coupons",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons"
+							]
+						},
+						"description": "Cria um cupom de valor fixo"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Cupons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons"
+							]
+						},
+						"description": "Lista todos os cupons"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Cupom por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons",
+								"1"
+							]
+						},
+						"description": "Busca um cupom específico pelo ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Cupom por Código",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/code/DESCONTO20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons",
+								"code",
+								"DESCONTO20"
+							]
+						},
+						"description": "Busca um cupom pelo código"
+					},
+					"response": []
+				},
+				{
+					"name": "Estatísticas do Cupom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/1/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons",
+								"1",
+								"stats"
+							]
+						},
+						"description": "Obtém estatísticas de uso do cupom"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Cupom",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"value\": 25,\n  \"max_uses\": 200,\n  \"valid_until\": \"2025-12-31T23:59:59.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/coupons/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons",
+								"1"
+							]
+						},
+						"description": "Atualiza um cupom existente"
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Cupom",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons",
+								"1"
+							]
+						},
+						"description": "Exclui um cupom (soft delete)"
+					},
+					"response": []
+				},
+				{
+					"name": "Restaurar Cupom",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/1/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"coupons",
+								"1",
+								"restore"
+							]
+						},
+						"description": "Restaura um cupom excluído"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001/api/v1",
+			"type": "string"
+		}
+	]
+}
